@@ -105,7 +105,7 @@ cd "$APP_DIR"
 # Build the application
 echo "Building Service Monitor..."
 cd "$APP_DIR"
-go mod download
+go mod tidy
 go build -ldflags="-s -w" -o service-monitor .
 
 # Verify binary
