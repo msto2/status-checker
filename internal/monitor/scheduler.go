@@ -121,8 +121,9 @@ func (s *Scheduler) checkAllServices() {
 	log.Printf("Completed checking %d services", len(services))
 
 	// Now fetch history for all services (after all writes are done)
+	// Fetch 100 history points to fill the frontend history bar
 	for i := range statuses {
-		history, err := s.db.GetServiceHistoryPoints(statuses[i].ID, 24)
+		history, err := s.db.GetServiceHistoryPoints(statuses[i].ID, 100)
 		if err != nil {
 			log.Printf("Error getting history for service ID %d: %v", statuses[i].ID, err)
 			history = nil
@@ -190,8 +191,8 @@ func (s *Scheduler) CheckServiceNow(serviceID int) (*models.ServiceStatus, error
 
 	status := s.checkService(*service)
 
-	// Fetch history for this single service
-	history, err := s.db.GetServiceHistoryPoints(serviceID, 24)
+	// Fetch history for this single service (100 points for frontend bar)
+	history, err := s.db.GetServiceHistoryPoints(serviceID, 100)
 	if err != nil {
 		log.Printf("Error getting history for service %s: %v", service.Name, err)
 		history = nil

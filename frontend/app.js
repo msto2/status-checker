@@ -96,19 +96,27 @@ class StatusMonitor {
     }
 
     renderHistoryBar(history) {
-        if (!history || history.length === 0) {
-            return '<div class="history-empty">No history yet</div>';
+        const totalSegments = 100;
+        const segments = [];
+
+        // Get actual history (reversed so oldest first)
+        const actualHistory = history ? [...history].reverse() : [];
+        const emptyCount = totalSegments - actualHistory.length;
+
+        // Add empty (gray) segments first for missing history
+        for (let i = 0; i < emptyCount; i++) {
+            segments.push('<div class="history-segment history-empty" title="No data"></div>');
         }
 
-        // Reverse so oldest is first (left) and newest is last (right)
-        const reversed = [...history].reverse();
-
-        return reversed.map((point, index) => {
+        // Add actual history segments
+        actualHistory.forEach(point => {
             const isUp = point.status === 'up';
             const statusClass = isUp ? 'history-up' : 'history-down';
             const title = `${isUp ? 'Up' : 'Down'} - ${new Date(point.checked_at).toLocaleString()}`;
-            return `<div class="history-segment ${statusClass}" title="${title}"></div>`;
-        }).join('');
+            segments.push(`<div class="history-segment ${statusClass}" title="${title}"></div>`);
+        });
+
+        return segments.join('');
     }
 
     renderBackendOffline() {
