@@ -1,7 +1,7 @@
 class StatusMonitor {
     constructor() {
         this.statusEndpoint = '/api/status';
-        this.refreshInterval = 10000; // 10 seconds
+        this.refreshInterval = 30000; // 30 seconds
         this.backendTimeout = 600000; // 10 minutes
         this.servicesContainer = document.getElementById('services-container');
         this.backendOfflineAlert = document.getElementById('backend-offline-alert');
@@ -10,7 +10,14 @@ class StatusMonitor {
 
     async fetchStatus() {
         try {
-            const response = await fetch(this.statusEndpoint);
+            // Add cache-busting to ensure fresh data
+            const url = `${this.statusEndpoint}?t=${Date.now()}`;
+            const response = await fetch(url, {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
             if (!response.ok) {
                 throw new Error('Failed to fetch status');
             }

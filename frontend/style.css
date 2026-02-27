@@ -171,18 +171,18 @@ header h1 {
 
 .history-bar {
     display: flex;
-    gap: 2px;
-    height: 24px;
+    gap: 1px;
+    height: 16px;
     background: #e9ecef;
     border-radius: 4px;
-    padding: 3px;
+    padding: 2px;
     overflow: hidden;
 }
 
 .history-segment {
-    flex: 1;
-    min-width: 8px;
-    border-radius: 2px;
+    width: 4px;
+    flex-shrink: 0;
+    border-radius: 1px;
     transition: transform 0.2s;
     cursor: pointer;
 }
