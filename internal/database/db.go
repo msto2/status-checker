@@ -406,6 +406,41 @@ func (db *DB) GetAllConfig() (map[string]string, error) {
 	return config, rows.Err()
 }
 
+// StatusEntry represents a single status entry for batch insert
+type StatusEntry struct {
+	ServiceID      int
+	Status         string
+	ResponseTimeMs int
+}
+
+// AddStatusHistoryBatch inserts multiple status entries in a single transaction
+func (db *DB) AddStatusHistoryBatch(entries []StatusEntry) error {
+	tx, err := db.conn.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare("INSERT INTO status_history (service_id, status, response_time_ms) VALUES (?, ?, ?)")
+	if err != nil {
+		return fmt.Errorf("failed to prepare statement: %w", err)
+	}
+	defer stmt.Close()
+
+	for _, entry := range entries {
+		_, err := stmt.Exec(entry.ServiceID, entry.Status, entry.ResponseTimeMs)
+		if err != nil {
+			return fmt.Errorf("failed to insert status for service %d: %w", entry.ServiceID, err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return nil
+}
+
 // Cleanup old history (optional utility function)
 func (db *DB) CleanupOldHistory(daysToKeep int) error {
 	cutoffDate := time.Now().AddDate(0, 0, -daysToKeep)
