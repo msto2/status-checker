@@ -405,3 +405,29 @@ func (db *DB) CleanupOldHistory(daysToKeep int) error {
 	)
 	return err
 }
+
+// GetServiceHistoryPoints returns recent history as HistoryPoint slices for frontend display
+func (db *DB) GetServiceHistoryPoints(serviceID int, limit int) ([]models.HistoryPoint, error) {
+	rows, err := db.conn.Query(
+		"SELECT status, checked_at FROM status_history WHERE service_id = ? ORDER BY checked_at DESC LIMIT ?",
+		serviceID, limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var points []models.HistoryPoint
+	for rows.Next() {
+		var status string
+		var checkedAt time.Time
+		if err := rows.Scan(&status, &checkedAt); err != nil {
+			return nil, err
+		}
+		points = append(points, models.HistoryPoint{
+			Status:    status,
+			CheckedAt: checkedAt.Format(time.RFC3339),
+		})
+	}
+	return points, rows.Err()
+}

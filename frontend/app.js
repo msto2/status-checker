@@ -29,33 +29,9 @@ class StatusMonitor {
         return (now - lastUpdate) < this.backendTimeout;
     }
 
-    updateStats(services, backendAlive) {
-        const totalElement = document.getElementById('total-services');
-        const upElement = document.getElementById('services-up');
-        const downElement = document.getElementById('services-down');
-
-        if (!backendAlive || !services) {
-            totalElement.textContent = '-';
-            upElement.textContent = '-';
-            downElement.textContent = '-';
-            return;
-        }
-
-        const total = services.length;
-        const up = services.filter(s => s.status === 'up').length;
-        const down = services.filter(s => s.status === 'down').length;
-
-        totalElement.textContent = total;
-        upElement.textContent = up;
-        downElement.textContent = down;
-    }
-
     renderServices(data) {
         // Check if backend is alive
         const backendAlive = data && this.isBackendAlive(data.last_update_time);
-
-        // Update stats
-        this.updateStats(data?.services, backendAlive);
 
         // Show/hide backend offline alert
         if (!backendAlive) {
@@ -91,32 +67,47 @@ class StatusMonitor {
 
     renderServiceCard(service) {
         const statusClass = service.status || 'unknown';
-        const responseTime = service.response_time_ms > 0 ? `${service.response_time_ms}ms` : 'N/A';
+        const statusText = statusClass === 'up' ? 'Online' : statusClass === 'down' ? 'Offline' : 'Unknown';
+
+        // Render history bar (newest on right, oldest on left)
+        const historyHtml = this.renderHistoryBar(service.history);
 
         return `
             <div class="service-card status-${statusClass}">
                 <div class="service-header">
                     <div class="service-name">${this.escapeHtml(service.name)}</div>
-                    <div class="status-badge ${statusClass}">${statusClass.toUpperCase()}</div>
+                    <div class="status-badge ${statusClass}">${statusText}</div>
                 </div>
-                <div class="service-details">
-                    <div class="service-detail">
-                        <span class="detail-label">IP Address</span>
-                        <span class="detail-value">${this.escapeHtml(service.ip_address)}</span>
-                    </div>
-                    <div class="service-detail">
-                        <span class="detail-label">Response Time</span>
-                        <span class="detail-value">${responseTime}</span>
+                <div class="history-section">
+                    <div class="history-label">Recent History</div>
+                    <div class="history-bar">
+                        ${historyHtml}
                     </div>
                 </div>
             </div>
         `;
     }
 
+    renderHistoryBar(history) {
+        if (!history || history.length === 0) {
+            return '<div class="history-empty">No history yet</div>';
+        }
+
+        // Reverse so oldest is first (left) and newest is last (right)
+        const reversed = [...history].reverse();
+
+        return reversed.map((point, index) => {
+            const isUp = point.status === 'up';
+            const statusClass = isUp ? 'history-up' : 'history-down';
+            const title = `${isUp ? 'Up' : 'Down'} - ${new Date(point.checked_at).toLocaleString()}`;
+            return `<div class="history-segment ${statusClass}" title="${title}"></div>`;
+        }).join('');
+    }
+
     renderBackendOffline() {
         this.servicesContainer.innerHTML = `
             <div class="backend-offline-warning">
-                <h2>⚠️ Monitoring System Offline</h2>
+                <h2>Monitoring System Offline</h2>
                 <p>The backend monitoring system has not reported any updates in over 10 minutes.</p>
                 <p>All services should be considered in an unknown state until the monitoring system comes back online.</p>
             </div>

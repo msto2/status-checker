@@ -47,13 +47,20 @@ type Config struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// HistoryPoint represents a single historical status check
+type HistoryPoint struct {
+	Status    string `json:"status"` // "up" or "down"
+	CheckedAt string `json:"checked_at"`
+}
+
 // ServiceStatus represents the current status of a service for frontend display
 type ServiceStatus struct {
-	ID             int    `json:"id"`
-	Name           string `json:"name"`
-	IPAddress      string `json:"ip_address"`
-	Status         string `json:"status"` // "up", "down", or "unknown"
-	ResponseTimeMs int    `json:"response_time_ms,omitempty"`
+	ID             int            `json:"id"`
+	Name           string         `json:"name"`
+	IPAddress      string         `json:"ip_address,omitempty"`
+	Status         string         `json:"status"` // "up", "down", or "unknown"
+	ResponseTimeMs int            `json:"response_time_ms,omitempty"`
+	History        []HistoryPoint `json:"history,omitempty"` // Recent ping history (newest first)
 }
 
 // FrontendPayload represents the data sent to the frontend

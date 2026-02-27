@@ -3,38 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service Status Monitor</title>
+    <title>Service Status</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>🖥️ Service Status Monitor</h1>
-            <p class="subtitle">Real-time monitoring of network services</p>
+            <h1>Service Status</h1>
+            <p class="last-update">Last updated: <span id="last-update">Never</span></p>
         </header>
 
         <div id="backend-offline-alert" class="alert alert-warning" style="display: none;">
-            <strong>⚠️ Monitoring System Offline</strong>
-            <p>The backend monitoring system has not reported in over 10 minutes. All service statuses should be considered unknown.</p>
-        </div>
-
-        <div class="stats">
-            <div class="stat-card">
-                <div class="stat-value" id="total-services">-</div>
-                <div class="stat-label">Total Services</div>
-            </div>
-            <div class="stat-card stat-up">
-                <div class="stat-value" id="services-up">-</div>
-                <div class="stat-label">Services Up</div>
-            </div>
-            <div class="stat-card stat-down">
-                <div class="stat-value" id="services-down">-</div>
-                <div class="stat-label">Services Down</div>
-            </div>
-        </div>
-
-        <div class="last-update">
-            Last updated: <span id="last-update">Never</span>
+            <strong>Monitoring System Offline</strong>
+            <p>The backend has not reported in over 10 minutes.</p>
         </div>
 
         <div id="services-container">
@@ -43,7 +24,7 @@
     </div>
 
     <footer>
-        <p>Service Status Monitor • Auto-refreshes every 10 seconds</p>
+        <p>Auto-refreshes every 10 seconds</p>
     </footer>
 
     <script src="app.js"></script>

@@ -161,12 +161,18 @@ func (s *Scheduler) checkService(service models.Service) models.ServiceStatus {
 		s.onStatusChange(service, newStatus, previousStatus)
 	}
 
+	// Get recent history for frontend display (last 24 checks = ~2 hours of history at 5 min intervals)
+	history, err := s.db.GetServiceHistoryPoints(service.ID, 24)
+	if err != nil {
+		log.Printf("Error getting history for service %s: %v", service.Name, err)
+		history = nil
+	}
+
 	return models.ServiceStatus{
-		ID:             service.ID,
-		Name:           service.Name,
-		IPAddress:      service.IPAddress,
-		Status:         newStatus,
-		ResponseTimeMs: result.ResponseTime,
+		ID:      service.ID,
+		Name:    service.Name,
+		Status:  newStatus,
+		History: history,
 	}
 }
 
