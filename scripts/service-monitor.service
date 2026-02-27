@@ -1,0 +1,24 @@
+[Unit]
+Description=Service Monitor
+Documentation=https://github.com/yourusername/service-monitor
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/service-monitor
+ExecStart=/opt/service-monitor/service-monitor
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/service-monitor/app.log
+StandardError=append:/var/log/service-monitor/app.log
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Resource limits
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

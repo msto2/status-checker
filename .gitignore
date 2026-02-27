@@ -1,0 +1,62 @@
+# Binaries
+service-monitor
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Dependency directories
+vendor/
+
+# Go workspace file
+go.work
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Log files
+*.log
+app.log
+
+# Configuration (contains sensitive data)
+config.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backups
+/backups/
+*.backup
+
+# Environment variables
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
+
+# Cloudflare
+.wrangler/
+wrangler.toml
+
+# Node modules (if using npm for Cloudflare)
+node_modules/
+package-lock.json

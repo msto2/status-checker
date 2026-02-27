@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Monitor - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #ddd;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .tab:hover {
+            border-color: #3498db;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-success {
+            background: #27ae60;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-up {
+            background: #27ae60;
+        }
+
+        .status-down {
+            background: #e74c3c;
+        }
+
+        .status-unknown {
+            background: #95a5a6;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #2c3e50;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .alert {
+            padding: 12px 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .icon-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #95a5a6;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #95a5a6;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🖥️ Service Monitor - Admin Panel</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="alert" style="display: none;"></div>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="services">Services</div>
+            <div class="tab" data-tab="alerts">Email Alerts</div>
+            <div class="tab" data-tab="config">Configuration</div>
+            <div class="tab" data-tab="logs">Alert Logs</div>
+        </div>
+
+        <!-- Services Tab -->
+        <div id="services" class="tab-content active">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Monitored Services</h2>
+                <button class="btn" onclick="showAddServiceModal()">+ Add Service</button>
+            </div>
+            <div id="services-table"></div>
+        </div>
+
+        <!-- Alerts Tab -->
+        <div id="alerts" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Email Alert Recipients</h2>
+                <button class="btn" onclick="showAddRecipientModal()">+ Add Recipient</button>
+            </div>
+            <div id="recipients-table"></div>
+        </div>
+
+        <!-- Config Tab -->
+        <div id="config" class="tab-content">
+            <h2 style="margin-bottom: 20px;">SMTP Configuration</h2>
+            <form id="config-form">
+                <div class="config-grid">
+                    <div class="form-group">
+                        <label>SMTP Host</label>
+                        <input type="text" id="smtp_host" placeholder="smtp.gmail.com">
+                    </div>
+                    <div class="form-group">
+                        <label>SMTP Port</label>
+                        <input type="text" id="smtp_port" placeholder="587">
+                    </div>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="smtp_username" placeholder="your-email@gmail.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="smtp_password" placeholder="app-specific password">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>From Address</label>
+                    <input type="email" id="smtp_from" placeholder="Service Monitor <alerts@example.com>">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-success">Save Configuration</button>
+                    <button type="button" class="btn" onclick="testEmailConfig()">Test Email</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Logs Tab -->
+        <div id="logs" class="tab-content">
+            <h2 style="margin-bottom: 20px;">Recent Alert Logs</h2>
+            <div id="logs-table"></div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Service Modal -->
+    <div id="service-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="service-modal-title">Add Service</h2>
+            </div>
+            <form id="service-form">
+                <input type="hidden" id="service-id">
+                <div class="form-group">
+                    <label>Service Name *</label>
+                    <input type="text" id="service-name" required>
+                </div>
+                <div class="form-group">
+                    <label>IP Address *</label>
+                    <input type="text" id="service-ip" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="service-description"></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="service-enabled" checked>
+                    <label for="service-enabled">Enabled</label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeModal('service-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-success">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Recipient Modal -->
+    <div id="recipient-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Email Recipient</h2>
+            </div>
+            <form id="recipient-form">
+                <div class="form-group">
+                    <label>Email Address *</label>
+                    <input type="email" id="recipient-email" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeModal('recipient-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-success">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+
+                // Load data for the active tab
+                const activeTab = tab.dataset.tab;
+                if (activeTab === 'services') loadServices();
+                else if (activeTab === 'alerts') loadRecipients();
+                else if (activeTab === 'config') loadConfig();
+                else if (activeTab === 'logs') loadLogs();
+            });
+        });
+
+        // Alert functions
+        function showAlert(message, type = 'success') {
+            const alert = document.getElementById('alert');
+            alert.className = type === 'success' ? 'alert alert-success' : 'alert alert-error';
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 5000);
+        }
+
+        // Modal functions
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function showAddServiceModal() {
+            document.getElementById('service-modal-title').textContent = 'Add Service';
+            document.getElementById('service-form').reset();
+            document.getElementById('service-id').value = '';
+            document.getElementById('service-enabled').checked = true;
+            document.getElementById('service-modal').classList.add('active');
+        }
+
+        function showEditServiceModal(service) {
+            document.getElementById('service-modal-title').textContent = 'Edit Service';
+            document.getElementById('service-id').value = service.id;
+            document.getElementById('service-name').value = service.name;
+            document.getElementById('service-ip').value = service.ip_address;
+            document.getElementById('service-description').value = service.description || '';
+            document.getElementById('service-enabled').checked = service.enabled;
+            document.getElementById('service-modal').classList.add('active');
+        }
+
+        function showAddRecipientModal() {
+            document.getElementById('recipient-form').reset();
+            document.getElementById('recipient-modal').classList.add('active');
+        }
+
+        // Services
+        async function loadServices() {
+            const container = document.getElementById('services-table');
+            container.innerHTML = '<div class="loading">Loading services...</div>';
+
+            try {
+                const response = await fetch('/api/services');
+                const services = await response.json();
+
+                if (services.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No services configured yet. Click "Add Service" to get started.</div>';
+                    return;
+                }
+
+                const html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Name</th>
+                                <th>IP Address</th>
+                                <th>Description</th>
+                                <th>Enabled</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${services.map(service => `
+                                <tr>
+                                    <td><span class="status-indicator status-unknown"></span></td>
+                                    <td>${service.name}</td>
+                                    <td>${service.ip_address}</td>
+                                    <td>${service.description || '-'}</td>
+                                    <td>${service.enabled ? '✓' : '✗'}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn icon-btn" onclick='showEditServiceModal(${JSON.stringify(service)})'>Edit</button>
+                                            <button class="btn btn-success icon-btn" onclick="checkService(${service.id})">Check</button>
+                                            <button class="btn btn-danger icon-btn" onclick="deleteService(${service.id}, '${service.name}')">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                container.innerHTML = html;
+
+                // Load current status for each service
+                services.forEach(async (service) => {
+                    try {
+                        const historyResponse = await fetch(`/api/services/${service.id}/history?limit=1`);
+                        const history = await historyResponse.json();
+                        if (history && history.length > 0) {
+                            const statusClass = history[0].status === 'up' ? 'status-up' : 'status-down';
+                            const row = container.querySelector(`tr:has(td:nth-child(2):contains("${service.name}"))`);
+                            if (row) {
+                                const indicator = row.querySelector('.status-indicator');
+                                indicator.className = `status-indicator ${statusClass}`;
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Failed to load status:', err);
+                    }
+                });
+            } catch (error) {
+                container.innerHTML = '<div class="alert alert-error">Failed to load services</div>';
+            }
+        }
+
+        document.getElementById('service-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('service-id').value;
+            const data = {
+                name: document.getElementById('service-name').value,
+                ip_address: document.getElementById('service-ip').value,
+                description: document.getElementById('service-description').value,
+                enabled: document.getElementById('service-enabled').checked
+            };
+
+            try {
+                const url = id ? `/api/services/${id}` : '/api/services';
+                const method = id ? 'PUT' : 'POST';
+                const response = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showAlert(`Service ${id ? 'updated' : 'added'} successfully`);
+                    closeModal('service-modal');
+                    loadServices();
+                } else {
+                    showAlert('Failed to save service', 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to save service', 'error');
+            }
+        });
+
+        async function checkService(id) {
+            try {
+                const response = await fetch(`/api/services/${id}/check`, { method: 'POST' });
+                const result = await response.json();
+                showAlert(`Service checked: ${result.status.toUpperCase()}`);
+                loadServices();
+            } catch (error) {
+                showAlert('Failed to check service', 'error');
+            }
+        }
+
+        async function deleteService(id, name) {
+            if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+
+            try {
+                const response = await fetch(`/api/services/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showAlert('Service deleted successfully');
+                    loadServices();
+                } else {
+                    showAlert('Failed to delete service', 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to delete service', 'error');
+            }
+        }
+
+        // Recipients
+        async function loadRecipients() {
+            const container = document.getElementById('recipients-table');
+            container.innerHTML = '<div class="loading">Loading recipients...</div>';
+
+            try {
+                const response = await fetch('/api/alerts');
+                const recipients = await response.json();
+
+                if (recipients.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No email recipients configured yet. Click "Add Recipient" to get started.</div>';
+                    return;
+                }
+
+                const html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Enabled</th>
+                                <th>Added</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${recipients.map(recipient => `
+                                <tr>
+                                    <td>${recipient.email}</td>
+                                    <td>${recipient.enabled ? '✓' : '✗'}</td>
+                                    <td>${new Date(recipient.created_at).toLocaleDateString()}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <button class="btn btn-danger icon-btn" onclick="deleteRecipient(${recipient.id}, '${recipient.email}')">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = '<div class="alert alert-error">Failed to load recipients</div>';
+            }
+        }
+
+        document.getElementById('recipient-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { email: document.getElementById('recipient-email').value };
+
+            try {
+                const response = await fetch('/api/alerts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showAlert('Recipient added successfully');
+                    closeModal('recipient-modal');
+                    loadRecipients();
+                } else {
+                    showAlert('Failed to add recipient', 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to add recipient', 'error');
+            }
+        });
+
+        async function deleteRecipient(id, email) {
+            if (!confirm(`Are you sure you want to delete "${email}"?`)) return;
+
+            try {
+                const response = await fetch(`/api/alerts/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    showAlert('Recipient deleted successfully');
+                    loadRecipients();
+                } else {
+                    showAlert('Failed to delete recipient', 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to delete recipient', 'error');
+            }
+        }
+
+        // Configuration
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+
+                document.getElementById('smtp_host').value = config.smtp_host || '';
+                document.getElementById('smtp_port').value = config.smtp_port || '587';
+                document.getElementById('smtp_username').value = config.smtp_username || '';
+                document.getElementById('smtp_password').value = config.smtp_password || '';
+                document.getElementById('smtp_from').value = config.smtp_from || '';
+            } catch (error) {
+                showAlert('Failed to load configuration', 'error');
+            }
+        }
+
+        document.getElementById('config-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                smtp_host: document.getElementById('smtp_host').value,
+                smtp_port: document.getElementById('smtp_port').value,
+                smtp_username: document.getElementById('smtp_username').value,
+                smtp_password: document.getElementById('smtp_password').value,
+                smtp_from: document.getElementById('smtp_from').value
+            };
+
+            try {
+                const response = await fetch('/api/config', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    showAlert('Configuration saved successfully');
+                } else {
+                    showAlert('Failed to save configuration', 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to save configuration', 'error');
+            }
+        });
+
+        async function testEmailConfig() {
+            const email = prompt('Enter email address to send test email:');
+            if (!email) return;
+
+            try {
+                const response = await fetch('/api/alerts/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                if (response.ok) {
+                    showAlert('Test email sent successfully! Check your inbox.');
+                } else {
+                    const error = await response.json();
+                    showAlert(error.error || 'Failed to send test email', 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to send test email', 'error');
+            }
+        }
+
+        // Logs
+        async function loadLogs() {
+            const container = document.getElementById('logs-table');
+            container.innerHTML = '<div class="loading">Loading logs...</div>';
+
+            try {
+                const response = await fetch('/api/alerts/logs');
+                const logs = await response.json();
+
+                if (logs.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No alert logs yet.</div>';
+                    return;
+                }
+
+                const html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Recipient</th>
+                                <th>Status</th>
+                                <th>Error</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${logs.map(log => `
+                                <tr>
+                                    <td>${new Date(log.sent_at).toLocaleString()}</td>
+                                    <td>${log.recipient_email}</td>
+                                    <td>${log.status === 'sent' ? '✓ Sent' : '✗ Failed'}</td>
+                                    <td>${log.error_message || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = '<div class="alert alert-error">Failed to load logs</div>';
+            }
+        }
+
+        // Initial load
+        loadServices();
+    </script>
+</body>
+</html>
