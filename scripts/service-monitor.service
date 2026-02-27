@@ -1,6 +1,6 @@
 [Unit]
 Description=Service Monitor
-Documentation=https://github.com/yourusername/service-monitor
+Documentation=https://github.com/msto2/serverStatus
 After=network.target
 
 [Service]

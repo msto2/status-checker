@@ -64,17 +64,37 @@ APP_DIR="/opt/service-monitor"
 mkdir -p "$APP_DIR"
 mkdir -p /var/log/service-monitor
 
-# Check if we're installing from current directory
-if [ -f "$(dirname "$0")/../go.mod" ]; then
-  echo "Copying application files..."
-  SCRIPT_DIR="$(dirname "$0")/.."
-  cp -r "$SCRIPT_DIR"/* "$APP_DIR/"
-  cd "$APP_DIR"
+# Determine source directory for application files
+SCRIPT_PATH="$(readlink -f "$0")"
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+SOURCE_DIR=""
+
+# Check if go.mod exists in parent directory (running from scripts/)
+if [ -f "$SCRIPT_DIR/../go.mod" ]; then
+  SOURCE_DIR="$(readlink -f "$SCRIPT_DIR/..")"
+  echo "Found source files in: $SOURCE_DIR"
+# Check if go.mod exists in current directory
+elif [ -f "./go.mod" ]; then
+  SOURCE_DIR="$(pwd)"
+  echo "Found source files in current directory: $SOURCE_DIR"
+# Check if go.mod exists two levels up (running from nested location)
+elif [ -f "../../go.mod" ]; then
+  SOURCE_DIR="$(readlink -f ../..)"
+  echo "Found source files in: $SOURCE_DIR"
 else
-  echo "Please ensure you're running this script from the scripts directory"
-  echo "Or manually copy all files to $APP_DIR first"
+  echo "Error: Cannot find go.mod file!"
+  echo "Please run this script from:"
+  echo "  - The repository root directory: ./scripts/install.sh"
+  echo "  - The scripts directory: ./install.sh"
+  echo "Current directory: $(pwd)"
+  echo "Script location: $SCRIPT_DIR"
   exit 1
 fi
+
+# Copy application files
+echo "Copying application files from $SOURCE_DIR to $APP_DIR..."
+cp -r "$SOURCE_DIR"/* "$APP_DIR/"
+cd "$APP_DIR"
 
 # Build the application
 echo "Building Service Monitor..."
@@ -115,7 +135,7 @@ echo "Creating systemd service..."
 cat > /etc/systemd/system/service-monitor.service <<EOF
 [Unit]
 Description=Service Monitor
-Documentation=https://github.com/yourusername/service-monitor
+Documentation=https://github.com/msto2/serverStatus
 After=network.target
 
 [Service]
