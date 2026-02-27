@@ -48,6 +48,7 @@ fi
 # Rebuild
 echo "Building Service Monitor..."
 export PATH=$PATH:/usr/local/go/bin
+go mod tidy
 go build -ldflags="-s -w" -o service-monitor .
 
 # Restart service
