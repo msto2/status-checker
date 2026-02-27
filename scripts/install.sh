@@ -5,6 +5,9 @@
 
 set -e
 
+# Save the script directory at the very beginning before any cd commands
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 echo "========================================="
 echo "Service Monitor Installation"
 echo "========================================="
@@ -65,8 +68,6 @@ mkdir -p "$APP_DIR"
 mkdir -p /var/log/service-monitor
 
 # Determine source directory for application files
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SOURCE_DIR=""
 
 echo "Script directory: $SCRIPT_DIR"
