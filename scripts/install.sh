@@ -65,22 +65,21 @@ mkdir -p "$APP_DIR"
 mkdir -p /var/log/service-monitor
 
 # Determine source directory for application files
-SCRIPT_PATH="$(readlink -f "$0")"
-SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SOURCE_DIR=""
+
+echo "Script directory: $SCRIPT_DIR"
+echo "Current directory: $(pwd)"
 
 # Check if go.mod exists in parent directory (running from scripts/)
 if [ -f "$SCRIPT_DIR/../go.mod" ]; then
-  SOURCE_DIR="$(readlink -f "$SCRIPT_DIR/..")"
+  SOURCE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
   echo "Found source files in: $SOURCE_DIR"
 # Check if go.mod exists in current directory
-elif [ -f "./go.mod" ]; then
+elif [ -f "$(pwd)/go.mod" ]; then
   SOURCE_DIR="$(pwd)"
   echo "Found source files in current directory: $SOURCE_DIR"
-# Check if go.mod exists two levels up (running from nested location)
-elif [ -f "../../go.mod" ]; then
-  SOURCE_DIR="$(readlink -f ../..)"
-  echo "Found source files in: $SOURCE_DIR"
 else
   echo "Error: Cannot find go.mod file!"
   echo "Please run this script from:"
@@ -88,12 +87,18 @@ else
   echo "  - The scripts directory: ./install.sh"
   echo "Current directory: $(pwd)"
   echo "Script location: $SCRIPT_DIR"
+  ls -la "$SCRIPT_DIR/../"
   exit 1
 fi
 
 # Copy application files
 echo "Copying application files from $SOURCE_DIR to $APP_DIR..."
-cp -r "$SOURCE_DIR"/* "$APP_DIR/"
+cp -r "$SOURCE_DIR"/* "$APP_DIR/" || {
+  echo "Error: Failed to copy files from $SOURCE_DIR to $APP_DIR"
+  echo "Source directory contents:"
+  ls -la "$SOURCE_DIR"
+  exit 1
+}
 cd "$APP_DIR"
 
 # Build the application
