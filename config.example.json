@@ -1,0 +1,16 @@
+{
+  "admin_port": 8080,
+  "admin_bind": "0.0.0.0",
+  "database_path": "./monitor.db",
+  "log_file": "./app.log",
+  "log_level": "info",
+  "frontend_url": "https://status.triplepoint.me/api/update",
+  "api_key": "CHANGE_THIS_TO_64_CHAR_KEY",
+  "check_interval_seconds": 300,
+  "ping_timeout_seconds": 5,
+  "ping_count": 4,
+  "max_concurrent_pings": 10,
+  "push_timeout_seconds": 10,
+  "push_retry_attempts": 3,
+  "alert_cooldown_minutes": 60
+}

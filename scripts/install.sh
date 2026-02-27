@@ -5,8 +5,8 @@
 
 set -e
 
-# Save the script directory at the very beginning before any cd commands
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_URL="https://github.com/msto2/serverStatus.git"
+APP_DIR="/opt/service-monitor"
 
 echo "========================================="
 echo "Service Monitor Installation"
@@ -61,50 +61,57 @@ export PATH=$PATH:/usr/local/go/bin
 echo "Verifying Go installation..."
 go version
 
-# Create application directory
-echo "Creating application directory..."
-APP_DIR="/opt/service-monitor"
-mkdir -p "$APP_DIR"
+# Create log directory
 mkdir -p /var/log/service-monitor
 
-# Determine source directory for application files
-SOURCE_DIR=""
-
-echo "Script directory: $SCRIPT_DIR"
-echo "Current directory: $(pwd)"
-
-# Check if go.mod exists in parent directory (running from scripts/)
-if [ -f "$SCRIPT_DIR/../go.mod" ]; then
-  SOURCE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-  echo "Found source files in: $SOURCE_DIR"
-# Check if go.mod exists in current directory
-elif [ -f "$(pwd)/go.mod" ]; then
-  SOURCE_DIR="$(pwd)"
-  echo "Found source files in current directory: $SOURCE_DIR"
+# Clone or update repository
+echo "Setting up application directory..."
+if [ -d "$APP_DIR/.git" ]; then
+  echo "Repository already exists, pulling latest changes..."
+  cd "$APP_DIR"
+  # Save config before pull
+  cp config.json config.json.backup 2>/dev/null || true
+  git fetch origin
+  git reset --hard origin/main
+  # Restore config
+  if [ -f config.json.backup ]; then
+    cp config.json.backup config.json
+    rm config.json.backup
+  fi
 else
-  echo "Error: Cannot find go.mod file!"
-  echo "Please run this script from:"
-  echo "  - The repository root directory: ./scripts/install.sh"
-  echo "  - The scripts directory: ./install.sh"
-  echo "Current directory: $(pwd)"
-  echo "Script location: $SCRIPT_DIR"
-  ls -la "$SCRIPT_DIR/../"
-  exit 1
+  echo "Cloning repository..."
+  rm -rf "$APP_DIR"
+  git clone "$REPO_URL" "$APP_DIR"
 fi
 
-# Copy application files
-echo "Copying application files from $SOURCE_DIR to $APP_DIR..."
-cp -r "$SOURCE_DIR"/* "$APP_DIR/" || {
-  echo "Error: Failed to copy files from $SOURCE_DIR to $APP_DIR"
-  echo "Source directory contents:"
-  ls -la "$SOURCE_DIR"
-  exit 1
-}
 cd "$APP_DIR"
+
+# Create config.json from example if it doesn't exist
+if [ ! -f "$APP_DIR/config.json" ]; then
+  echo "Creating config.json from template..."
+  cp "$APP_DIR/config.example.json" "$APP_DIR/config.json"
+
+  # Generate API key
+  echo "Generating secure API key..."
+  API_KEY=$(openssl rand -hex 32)
+  sed -i "s/CHANGE_THIS_TO_64_CHAR_KEY/$API_KEY/g" "$APP_DIR/config.json"
+
+  echo ""
+  echo "========================================="
+  echo "IMPORTANT: Your API Key"
+  echo "========================================="
+  echo "$API_KEY"
+  echo ""
+  echo "Save this key! You'll need it for:"
+  echo "1. Cloudflare Pages environment variable"
+  echo "2. Backend cannot push updates without it"
+  echo "========================================="
+  echo ""
+  read -p "Press Enter to continue..."
+fi
 
 # Build the application
 echo "Building Service Monitor..."
-cd "$APP_DIR"
 go mod tidy
 go build -ldflags="-s -w" -o service-monitor .
 
@@ -115,26 +122,6 @@ if [ ! -f "$APP_DIR/service-monitor" ]; then
 fi
 
 echo "Binary built successfully"
-
-# Generate API key if not already set in config
-echo "Checking API key in config.json..."
-if grep -q "CHANGE_THIS_TO_64_CHAR_KEY" "$APP_DIR/config.json"; then
-  echo "Generating secure API key..."
-  API_KEY=$(openssl rand -hex 32)
-  sed -i "s/CHANGE_THIS_TO_64_CHAR_KEY/$API_KEY/g" "$APP_DIR/config.json"
-  echo ""
-  echo "========================================="
-  echo "IMPORTANT: Your API Key"
-  echo "========================================="
-  echo "$API_KEY"
-  echo ""
-  echo "Save this key! You'll need it for:"
-  echo "1. Cloudflare Worker configuration"
-  echo "2. Backend cannot push updates without it"
-  echo "========================================="
-  echo ""
-  read -p "Press Enter to continue..."
-fi
 
 # Create systemd service
 echo "Creating systemd service..."
@@ -236,7 +223,7 @@ EOF
 chmod +x /opt/backups/backup-service-monitor.sh
 
 # Add backup to crontab (daily at 2 AM)
-(crontab -l 2>/dev/null; echo "0 2 * * * /opt/backups/backup-service-monitor.sh") | crontab -
+(crontab -l 2>/dev/null | grep -v "backup-service-monitor"; echo "0 2 * * * /opt/backups/backup-service-monitor.sh") | crontab -
 
 # Get local IP
 LOCAL_IP=$(hostname -I | awk '{print $1}')
@@ -265,11 +252,8 @@ echo ""
 echo "5. View logs:"
 echo "   tail -f /var/log/service-monitor/app.log"
 echo ""
-echo "6. Configure Cloudflare Pages:"
-echo "   - Deploy frontend/ directory to Cloudflare Pages"
-echo "   - Set domain: status.triplepoint.me"
-echo "   - Add KV binding: STATUS_STORE"
-echo "   - Set environment variable API_KEY (shown above)"
+echo "6. Update the application:"
+echo "   $APP_DIR/scripts/update.sh"
 echo ""
 echo "Configuration file: $APP_DIR/config.json"
 echo "Database location: $APP_DIR/monitor.db"
