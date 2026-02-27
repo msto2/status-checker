@@ -105,7 +105,7 @@ func (s *Scheduler) checkAllServices() {
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }()
 
-			// Check the service
+			// Check the service (ping and store only, no history fetch)
 			status := s.checkService(svc)
 
 			// Add to results
@@ -119,6 +119,18 @@ func (s *Scheduler) checkAllServices() {
 	wg.Wait()
 
 	log.Printf("Completed checking %d services", len(services))
+
+	// Now fetch history for all services (after all writes are done)
+	for i := range statuses {
+		history, err := s.db.GetServiceHistoryPoints(statuses[i].ID, 24)
+		if err != nil {
+			log.Printf("Error getting history for service ID %d: %v", statuses[i].ID, err)
+			history = nil
+		}
+		statuses[i].History = history
+	}
+
+	log.Println("History fetched for all services")
 
 	// Trigger callback with all statuses
 	if s.onCheckComplete != nil {
@@ -161,18 +173,11 @@ func (s *Scheduler) checkService(service models.Service) models.ServiceStatus {
 		s.onStatusChange(service, newStatus, previousStatus)
 	}
 
-	// Get recent history for frontend display (last 24 checks = ~2 hours of history at 5 min intervals)
-	history, err := s.db.GetServiceHistoryPoints(service.ID, 24)
-	if err != nil {
-		log.Printf("Error getting history for service %s: %v", service.Name, err)
-		history = nil
-	}
-
+	// Return status without history - history is fetched after all pings complete
 	return models.ServiceStatus{
-		ID:      service.ID,
-		Name:    service.Name,
-		Status:  newStatus,
-		History: history,
+		ID:     service.ID,
+		Name:   service.Name,
+		Status: newStatus,
 	}
 }
 
@@ -184,5 +189,14 @@ func (s *Scheduler) CheckServiceNow(serviceID int) (*models.ServiceStatus, error
 	}
 
 	status := s.checkService(*service)
+
+	// Fetch history for this single service
+	history, err := s.db.GetServiceHistoryPoints(serviceID, 24)
+	if err != nil {
+		log.Printf("Error getting history for service %s: %v", service.Name, err)
+		history = nil
+	}
+	status.History = history
+
 	return &status, nil
 }
