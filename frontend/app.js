@@ -124,7 +124,8 @@ class StatusMonitor {
             <div class="backend-offline-warning">
                 <h2>Monitoring System Offline</h2>
                 <p>The backend monitoring system has not reported any updates in over 10 minutes.</p>
-                <p>All services should be considered in an unknown state until the monitoring system comes back online.</p>
+                <p><strong>The internet connection is likely down.</strong></p>
+                <p>All services should be considered in an unknown state until connectivity is restored.</p>
             </div>
         `;
     }
