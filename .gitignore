@@ -60,3 +60,7 @@ wrangler.toml
 # Node modules (if using npm for Cloudflare)
 node_modules/
 package-lock.json
+
+.dev.vars*
+!.dev.vars.example
+!.env.example
